@@ -8,7 +8,7 @@ import Scrape
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.utils import exceptions, executor
 
-API_TOKEN = open('apitoken.txt', 'r').read().strip() 
+API_TOKEN = open('apitoken.txt', 'r').read().strip()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -53,7 +53,6 @@ async def send_message(user_id: int, text: str, disable_notification: bool = Fal
 
 
 async def check_background():
-
     while True:
         current_results, current_html = Scrape.get_ids()
         cur_tog_users = toggled_users
@@ -64,10 +63,11 @@ async def check_background():
                 elif user in toggled_debug_users:
                     await send_message(user, result[1] + '-' + result[2] + " ist leider voll.")
 
-        for i in range(7):
+        interv = 5
+        for i in range(interv):
             for user in toggled_users:
                 if user in toggled_debug_users:
-                    await send_message(user, f"Next check in {30 - i} seconds.")
+                    await send_message(user, f"Next check in {interv - i} seconds.")
             await asyncio.sleep(1)
 
 
@@ -77,6 +77,7 @@ async def bruv_kek(message: types.Message):
         await message.answer(str(i))
         i += 1
         await asyncio.sleep(1)
+
 
 async def toggle_debug(message: types.Message):
     uid = message.from_user.id
@@ -109,9 +110,18 @@ async def default(message: types.Message):
 
 
 async def start_handler(event: types.Message):
+    ib = aiogram.types.reply_keyboard.ReplyKeyboardMarkup()
+    ib.add(aiogram.types.KeyboardButton('/start'))
+    ib.add(aiogram.types.KeyboardButton('/debug'))
+    ib.add(aiogram.types.KeyboardButton('/toggle'))
+    ib.add(aiogram.types.KeyboardButton('/check_toggled'))
+    ib.add(aiogram.types.KeyboardButton('/toggle_debug'))
+
+
     await event.answer(
         f"Hello, {event.from_user.get_mention(as_html=True)} 👋!",
         parse_mode=types.ParseMode.HTML,
+        reply_markup=ib
     )
 
     await event.answer("Available commands are: help, check, toggle, check_toggled, debug, start, help, toggle_debug")
@@ -128,8 +138,9 @@ async def check(message: types.Message):
 
 async def debug(message: types.Message):
     _, html_text = Scrape.get_ids()
-    #file = aiogram.types.input_file.InputFile(html_text)
+    # file = aiogram.types.input_file.InputFile(html_text)
     await message.answer(f"Length of result is :{str(len(html_text))}")
+
 
 async def main():
     try:
