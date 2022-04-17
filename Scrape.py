@@ -3,14 +3,8 @@ import requests
 from bs4 import BeautifulSoup
 
 # Volleyball
-url2 = "https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Volleyball.html"
-id2 = ['6801', '6802', '6803', '6804', '6805', '6806', '6807']
-# Schwimmen
-url3 = "https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Schwimmen.html"
-id3 = ["5102", "5103", "5104"]
-# Tischtennis
-url = r'https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Tischtennis.html'
-id1 = ["6202", "6203", "6204"]
+volleyball_url = "https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Volleyball.html"
+volleyball_ids = ['6801', '6802', '6803', '6804', '6805', '6806', '6807']
 
 
 def check(url, ids):
@@ -36,17 +30,13 @@ def check(url, ids):
 def get_ids():
     check_results = []
 
-    tt_res, tt_html = check(url, id1)
+    res, html = check(volleyball_url, volleyball_ids)
 
-    for u in tt_res:
-        check_results.append(u)
-    for u in check(url2, id2)[0]:
-        check_results.append(u)
-    for u in check(url3, id3)[0]:
+    for u in res:
         check_results.append(u)
 
-    # tt_html for debugging.
-    return check_results, tt_html
+    return check_results, html
+
 
 if __name__ == '__main__':
     print(get_ids())
