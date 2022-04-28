@@ -2,11 +2,10 @@ import asyncio
 import logging
 
 import aiogram.types
+from aiogram import Bot, Dispatcher, types
+from aiogram.utils import exceptions
 
 import Scrape
-
-from aiogram import Bot, Dispatcher, executor, types
-from aiogram.utils import exceptions, executor
 
 API_TOKEN = open('apitoken.txt', 'r').read().strip()
 
@@ -14,13 +13,23 @@ API_TOKEN = open('apitoken.txt', 'r').read().strip()
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger('hss-bot')
 
-toggled_users = set()
+toggled_users = {}  # keys: course number, vals: set containing all users signed up for the course specified by the key
 toggled_debug_users = set()
 
-current_html = ""
-current_results = []
+current_htmls = {}  # The latest fetch of the html of the Hochschulsport site
+current_results = {}  # welche Kurse frei sind, key = Sportart, value = dict mit k: Kursname v: "Frei"/"Voll"
 
 bot = Bot(token=API_TOKEN)
+
+# Volleyball
+volleyball_url = "https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Volleyball.html"
+volleyball_ids = ['6800', '6802', '6803', '6804', '6805', '6806', '6807']
+
+# Sportmix
+sportmix_url = "https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Sportmix.html"
+sportmix_ids = ['5105', '5110', '5111']
+
+urls_ids = {'Volleyball': (volleyball_url, volleyball_ids), 'Sportmix': (sportmix_url, sportmix_ids)}
 
 
 async def send_message(user_id: int, text: str, disable_notification: bool = False) -> bool:
@@ -54,7 +63,10 @@ async def send_message(user_id: int, text: str, disable_notification: bool = Fal
 
 async def check_background():
     while True:
-        current_results, current_html = Scrape.get_ids()
+        for sportart in urls_ids.keys():
+            current_htmls[sportart] = Scrape.get_html(urls_ids[sportart][0])
+            current_results[sportart] = Scrape.check(current_htmls[sportart], urls_ids[sportart][1])
+
         cur_tog_users = toggled_users
         for user in cur_tog_users:
             for result in current_results:
@@ -63,20 +75,12 @@ async def check_background():
                 elif user in toggled_debug_users:
                     await send_message(user, result[1] + '-' + result[2] + " ist leider voll.")
 
-        interv = 5
-        for i in range(interv):
+        frequency = 5  # freq in seconds
+        for i in range(frequency):
             for user in toggled_users:
                 if user in toggled_debug_users:
-                    await send_message(user, f"Next check in {interv - i} seconds.")
+                    await send_message(user, f"Next check in {frequency - i} seconds.")
             await asyncio.sleep(1)
-
-
-async def bruv_kek(message: types.Message):
-    i = 0
-    while True:
-        await message.answer(str(i))
-        i += 1
-        await asyncio.sleep(1)
 
 
 async def toggle_debug(message: types.Message):
@@ -95,14 +99,14 @@ async def check_if_toggled(message: types.Message):
     await message.answer(msg_str)
 
 
-async def toggle_test(message: types.Message):
+async def toggle_course(message: types.Message):
     uid = message.from_user.id
-    if uid not in toggled_users:
-        await message.answer("Checking periodically now enabled.")
-        toggled_users.add(uid)
-    else:
-        await message.answer("Checking periodically now disabled.")
-        toggled_users.remove(uid)
+
+    await message.answer("Which course do you want to get updates about?")
+    print(current_results)
+    for sportart, courses in current_results.items():
+        for course in courses:
+            await message.answer(f"{sportart} - {course}")
 
 
 async def default(message: types.Message):
@@ -113,10 +117,9 @@ async def start_handler(event: types.Message):
     ib = aiogram.types.reply_keyboard.ReplyKeyboardMarkup()
     ib.add(aiogram.types.KeyboardButton('/start'))
     ib.add(aiogram.types.KeyboardButton('/debug'))
-    ib.add(aiogram.types.KeyboardButton('/toggle'))
+    ib.add(aiogram.types.KeyboardButton('/toggle_course'))
     ib.add(aiogram.types.KeyboardButton('/check_toggled'))
     ib.add(aiogram.types.KeyboardButton('/toggle_debug'))
-
 
     await event.answer(
         f"Hello, {event.from_user.get_mention(as_html=True)} 👋!",
@@ -124,22 +127,14 @@ async def start_handler(event: types.Message):
         reply_markup=ib
     )
 
-    await event.answer("Available commands are: help, check, toggle, check_toggled, debug, start, help, toggle_debug")
-
-
-async def check(message: types.Message):
-    scrape_res, _ = Scrape.get_ids()
-    for res in scrape_res:
-        if not res[0]:
-            await message.answer(res[1] + '-' + res[2] + " ist leider voll.")
-        else:
-            await message.answer(res[1] + '-' + res[2] + " ist frei! Schnell anmelden.")
+    await event.answer("Available commands are: help, toggle_course, toggle_debug")
 
 
 async def debug(message: types.Message):
-    _, html_text = Scrape.get_ids()
-    # file = aiogram.types.input_file.InputFile(html_text)
-    await message.answer(f"Length of result is :{str(len(html_text))}")
+    for html in current_htmls.values():
+        await message.answer(
+            f"Length of result is :{str(len(html))}.\nIf the length is low it might be that the bot is sending"
+            f" to many requests")
 
 
 async def main():
@@ -147,9 +142,7 @@ async def main():
         # Initialize bot and dispatcher
         disp = Dispatcher(bot=bot)
         disp.register_message_handler(start_handler, commands={"start", "help"})
-        disp.register_message_handler(toggle_test, commands={"toggle"})
-        disp.register_message_handler(check_if_toggled, commands={"check_toggled"})
-        disp.register_message_handler(check, commands={"check"})
+        disp.register_message_handler(toggle_course, commands={"toggle_course"})
         disp.register_message_handler(debug, commands={"debug"})
         disp.register_message_handler(toggle_debug, commands={"toggle_debug"})
         disp.register_message_handler(default)
