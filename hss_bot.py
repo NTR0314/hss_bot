@@ -1,3 +1,5 @@
+#!/bin/python3
+import logging
 import asyncio
 
 import aiogram.types
