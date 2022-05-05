@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 
 
 def get_html(url):
-    sport = url.split("_")[-1].split(".")[0]
     res = requests.get(url)
     return res.text
 
