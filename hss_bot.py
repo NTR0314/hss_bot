@@ -14,7 +14,8 @@ API_TOKEN = open('apitoken.txt', 'r').read().strip()
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger('hss-bot')
 
-toggled_users = {}  # keys: course number, vals: set containing all users signed up for the course specified by the key
+# toggled_users = {}  # keys: course number, vals: set containing all users signed up for the course specified by the key
+toggled_users = set()
 toggled_debug_users = set()
 
 current_htmls = {}  # The latest fetch of the html of the Hochschulsport site
@@ -70,11 +71,12 @@ async def check_background():
 
         cur_tog_users = toggled_users
         for user in cur_tog_users:
-            for result in current_results:
-                if result[0]:
-                    await send_message(user, result[1] + '-' + result[2] + " ist frei! Schnell anmelden.")
-                elif user in toggled_debug_users:
-                    await send_message(user, result[1] + '-' + result[2] + " ist leider voll.")
+            for sportart, result in current_results.items():
+                for kurs, zugaenglichkeit in result.items():
+                    if kurs[0] == 'Frei':
+                        await send_message(user, sportart + '-' + kurs + " ist frei! Schnell anmelden. Hier ist der Link: https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Volleyball.html")
+                    elif user in toggled_debug_users:
+                        await send_message(user, sportart + '-' + kurs + " ist leider voll. https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Volleyball.html")
 
         frequency = 5  # freq in seconds
         for i in range(frequency):
@@ -96,18 +98,27 @@ async def toggle_debug(message: types.Message):
 
 async def check_if_toggled(message: types.Message):
     uid = message.from_user.id
-    msg_str = "Currently enabled" if uid in toggled_users else "Currently disabled"
+    msg_str = "Currently toggled to receive updates" if uid in toggled_users else "Currently not toggled"
     await message.answer(msg_str)
 
 
 async def toggle_course(message: types.Message):
     uid = message.from_user.id
+    if uid not in toggled_users:
+        toggled_users.add(uid)
+    else:
+        toggled_users.remove(uid)
 
-    await message.answer("Which course do you want to get updates about?")
-    print(current_results)
-    for sportart, courses in current_results.items():
-        for course in courses:
-            await message.answer(f"{sportart} - {course}")
+    await message.answer("You will now get messages about Volleyball")
+
+    # TODO: implement that the user can choose which course he wants to get updates about for now the user gets updated for every course
+    # uid = message.from_user.id
+
+    # await message.answer("Which course do you want to get updates about?")
+    # print(current_results)
+    # for sportart, courses in current_results.items():
+    #     for course in courses:
+    #         await message.answer(f"{sportart} - {course}")
 
 
 async def default(message: types.Message):
@@ -119,7 +130,7 @@ async def start_handler(event: types.Message):
     ib.add(aiogram.types.KeyboardButton('/start'))
     ib.add(aiogram.types.KeyboardButton('/debug'))
     ib.add(aiogram.types.KeyboardButton('/toggle_course'))
-    ib.add(aiogram.types.KeyboardButton('/check_toggled'))
+    ib.add(aiogram.types.KeyboardButton('/check_if_toggled'))
     ib.add(aiogram.types.KeyboardButton('/toggle_debug'))
 
     await event.answer(
@@ -146,8 +157,8 @@ async def main():
         disp.register_message_handler(toggle_course, commands={"toggle_course"})
         disp.register_message_handler(debug, commands={"debug"})
         disp.register_message_handler(toggle_debug, commands={"toggle_debug"})
+        disp.register_message_handler(check_if_toggled, commands={"check_if_toggled"})
         disp.register_message_handler(default)
-
         asyncio.create_task(check_background())
 
         await disp.start_polling()
