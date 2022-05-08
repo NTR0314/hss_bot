@@ -147,6 +147,8 @@ async def debug(message: types.Message):
         await message.answer(
             f"Length of result is :{str(len(html))}.\nIf the length is low it might be that the bot is sending"
             f" to many requests")
+        if len(html) < 5000:
+            await message.answer("HTML is:\n" + str(html))
 
 
 async def main():
