@@ -78,7 +78,8 @@ async def check_background():
                     elif user in toggled_debug_users:
                         await send_message(user, sportart + '-' + kurs + " ist leider voll. https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Volleyball.html")
 
-        frequency = 5  # freq in seconds
+        import random
+        frequency = 20 + random.randint(0, 10)  # freq in seconds
         for i in range(frequency):
             for user in toggled_users:
                 if user in toggled_debug_users:
