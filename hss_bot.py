@@ -72,6 +72,10 @@ async def check_background():
         cur_tog_users = toggled_users
         for user in cur_tog_users:
             for sportart, result in current_results.items():
+                # Send user a message if the length of the html is too short
+                if len(current_htmls[sportart]) < 5000:
+                    await send_message(user, f"{sportart}-HTML is too short:\n" + str(current_htmls[sportart]))
+
                 for kurs, zugaenglichkeit in result.items():
                     if kurs[0] == 'Frei':
                         await send_message(user, sportart + '-' + kurs + " ist frei! Schnell anmelden. Hier ist der Link: https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Volleyball.html")
