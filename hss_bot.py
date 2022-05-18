@@ -25,7 +25,7 @@ bot = Bot(token=API_TOKEN)
 
 # Volleyball
 volleyball_url = "https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Volleyball.html"
-volleyball_ids = ['6800', '6802', '6803', '6804', '6805', '6806', '6807']
+volleyball_ids = ['6801', '6802', '6803', '6804', '6805', '6806', '6807']
 
 # Sportmix
 sportmix_url = "https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Sportmix.html"
