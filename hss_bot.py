@@ -111,10 +111,12 @@ async def toggle_course(message: types.Message):
     uid = message.from_user.id
     if uid not in toggled_users:
         toggled_users.add(uid)
+        await message.answer("You will now get messages about Volleyball")
     else:
         toggled_users.remove(uid)
+        await message.answer("You will now no longer receive notifications")
 
-    await message.answer("You will now get messages about Volleyball")
+
 
     # TODO: implement that the user can choose which course he wants to get updates about for now the user gets updated for every course
     # uid = message.from_user.id
