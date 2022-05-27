@@ -6,6 +6,7 @@ import aiogram.types
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import exceptions
 
+import os
 import Scrape
 import pickle
 
@@ -167,8 +168,10 @@ async def debug(message: types.Message):
 async def main():
 
     ##To read it again from file
-    with open('user_settings.txt','rb') as f:
-       toggled_users = pickle.load(f)
+    name = 'user_settings.txt'
+    if os.path.exists(name) and os.path.getsize(name) > 0:
+        with open(name,'rb') as f:
+            toggled_users = pickle.load(f)
 
     try:
         # Initialize bot and dispatcher
