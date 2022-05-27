@@ -7,6 +7,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.utils import exceptions
 
 import Scrape
+import pickle
 
 API_TOKEN = open('apitoken.txt', 'r').read().strip()
 
@@ -108,6 +109,7 @@ async def check_if_toggled(message: types.Message):
 
 
 async def toggle_course(message: types.Message):
+
     uid = message.from_user.id
     if uid not in toggled_users:
         toggled_users.add(uid)
@@ -115,6 +117,10 @@ async def toggle_course(message: types.Message):
     else:
         toggled_users.remove(uid)
         await message.answer("You will now no longer receive notifications")
+
+    # Dump settings of toggled users in file
+    with open('user_settings.txt','wb') as f:
+       pickle.dump(toggled_users, f)
 
 
 
@@ -159,6 +165,11 @@ async def debug(message: types.Message):
 
 
 async def main():
+
+    ##To read it again from file
+    with open('user_settings.txt','rb') as f:
+       toggled_users = pickle.load(f)
+
     try:
         # Initialize bot and dispatcher
         disp = Dispatcher(bot=bot)
