@@ -28,10 +28,10 @@ volleyball_url = "https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeit
 volleyball_ids = ['6801', '6802', '6803', '6804', '6805', '6806', '6807']
 
 # Sportmix
-sportmix_url = "https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Sportmix.html"
-sportmix_ids = ['5105', '5110', '5111']
+# sportmix_url = "https://buchsys.sport.uni-karlsruhe.de/angebote/aktueller_zeitraum/_Sportmix.html"
+# sportmix_ids = ['5105', '5110', '5111']
 
-urls_ids = {'Volleyball': (volleyball_url, volleyball_ids), 'Sportmix': (sportmix_url, sportmix_ids)}
+urls_ids = {'Volleyball': (volleyball_url, volleyball_ids)} # 'Sportmix': (sportmix_url, sportmix_ids)}
 
 
 async def send_message(user_id: int, text: str, disable_notification: bool = False) -> bool:
