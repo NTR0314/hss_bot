@@ -166,11 +166,11 @@ async def debug(message: types.Message):
 
 
 async def main():
-
     ##To read it again from file
     name = 'user_settings.txt'
     if os.path.exists(name) and os.path.getsize(name) > 0:
         with open(name,'rb') as f:
+            global toggled_users
             toggled_users = pickle.load(f)
 
     try:
