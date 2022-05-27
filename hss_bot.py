@@ -165,10 +165,10 @@ async def debug(message: types.Message):
 
 
 async def main():
-
     ##To read it again from file
     with open('user_settings.txt','rb') as f:
-       toggled_users = pickle.load(f)
+        global toggled_users
+        toggled_users = pickle.load(f)
 
     try:
         # Initialize bot and dispatcher
